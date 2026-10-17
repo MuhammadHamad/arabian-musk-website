@@ -55,7 +55,7 @@ export async function renderShareImage({
   footer: string;
 }) {
   const fonts = await loadFonts();
-  const titleSize = title.length > 34 ? 64 : title.length > 20 ? 78 : 96;
+  const titleSize = title.length > 34 ? 58 : title.length > 20 ? 70 : 84;
   return new ImageResponse(
     (
       <div
@@ -70,13 +70,13 @@ export async function renderShareImage({
           padding: "60px 72px",
         }}
       >
-        <div style={{ position: "absolute", right: 70, top: 95, display: "flex", opacity: 0.9 }}>
+        <div style={{ position: "absolute", right: -40, top: 95, display: "flex", opacity: 0.85 }}>
           <Star size={440} color={GOLD_DEEP} stroke />
         </div>
-        <div style={{ position: "absolute", right: 200, top: 225, display: "flex", opacity: 0.35 }}>
+        <div style={{ position: "absolute", right: 90, top: 225, display: "flex", opacity: 0.35 }}>
           <Star size={180} color={GOLD_DEEP} stroke />
         </div>
-        <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", width: 760 }}>
+        <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", width: 660 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             <Star size={40} />
             <div style={{ fontFamily: "Bodoni", fontWeight: 600, fontSize: 30, letterSpacing: 9 }}>ARABIAN MUSK</div>
@@ -88,7 +88,8 @@ export async function renderShareImage({
             <div style={{ fontFamily: "Bodoni", fontWeight: 600, fontSize: titleSize, lineHeight: 1.04, marginTop: 18 }}>
               {title}
             </div>
-            <div style={{ fontSize: 28, lineHeight: 1.4, color: STONE, marginTop: 22 }}>{subtitle}</div>
+            {/* Keep "Rs" with its number. */}
+            <div style={{ fontSize: 28, lineHeight: 1.4, color: STONE, marginTop: 22 }}>{subtitle.replace(/Rs /g, "Rs\u00a0")}</div>
           </div>
           <div style={{ display: "flex", fontSize: 22, color: GOLD, letterSpacing: 1 }}>{footer}</div>
         </div>
