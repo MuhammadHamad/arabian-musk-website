@@ -17,6 +17,6 @@ export default async function Image({ params }: { params: Promise<{ slug: string
     no: scent.no,
     line: scent.inspiredBy ? `Inspired by ${scent.inspiredBy}` : "Attar & perfume",
     prices: `Attar 12 ml ${formatRs(scent.prices.attar12)} · Perfume 30 ml ${formatRs(scent.prices.perfume30)}`,
-    footer: "Malogo Chowk, Jhagra, Peshawar · Order on WhatsApp",
+    footer: "Malogo Chowk, Jhagra, Peshawar",
   });
 }

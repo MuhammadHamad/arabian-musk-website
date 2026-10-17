@@ -81,9 +81,9 @@ export async function renderHomeShare({ eyebrow, title, subtitle, footer }: { ey
         {/* eslint-disable-next-line @next/next/no-img-element -- Satori renders plain <img> only */}
         <img src={hero} alt="" width={img.w} height={img.h} style={{ position: "absolute", left: img.x, top: img.y }} />
         <Label box={HERO_LABEL} img={img} />
-        <div style={{ position: "absolute", left: 72, top: 0, bottom: 0, width: 520, display: "flex", flexDirection: "column", justifyContent: "center" }}>
+        <div style={{ position: "absolute", left: 72, top: 0, bottom: 0, width: 460, display: "flex", flexDirection: "column", justifyContent: "center" }}>
           <div style={{ fontFamily: "Jost", fontWeight: 500, fontSize: 17, letterSpacing: 5, color: BRASS, textTransform: "uppercase" }}>{eyebrow}</div>
-          <div style={{ fontFamily: "Bodoni", fontSize: 76, lineHeight: 1.02, color: INK, marginTop: 20 }}>{title}</div>
+          <div style={{ fontFamily: "Bodoni", fontSize: 64, lineHeight: 1.04, color: INK, marginTop: 20 }}>{title}</div>
           <div style={{ fontFamily: "Jost", fontSize: 24, lineHeight: 1.45, color: MUTED, marginTop: 22, maxWidth: 440 }}>{subtitle}</div>
           <div style={{ fontFamily: "Jost", fontWeight: 500, fontSize: 15, letterSpacing: 3, color: INK, textTransform: "uppercase", marginTop: 36 }}>{footer}</div>
         </div>
