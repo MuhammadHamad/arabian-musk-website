@@ -5,7 +5,7 @@ import { JsonLd } from "@/components/json-ld";
 import { OrderProvider } from "@/components/order-provider";
 import { RevealObserver, revealBootScript } from "@/components/reveal-observer";
 import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
+import { AnnouncementBar, SiteHeader } from "@/components/site-header";
 import { SITE_URL, site } from "@/content/site";
 import { storeSchema, websiteSchema } from "@/lib/schema";
 
@@ -63,7 +63,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0b0907",
+  themeColor: "#f6f1e9",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -78,11 +78,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className="min-h-dvh">
         <a
           href="#main"
-          className="sr-only z-[100] rounded-full bg-gold-300 px-5 py-3 font-medium text-ink-950 focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
+          className="sr-only z-[100] bg-ink px-5 py-3 text-paper focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
         >
           Skip to content
         </a>
         <OrderProvider>
+          <AnnouncementBar />
           <SiteHeader />
           <main id="main">{children}</main>
           <SiteFooter />

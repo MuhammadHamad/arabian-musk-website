@@ -78,13 +78,14 @@ export function createOrderStore(knownSlugs: Set<string>) {
     getServerSnapshot() {
       return EMPTY_ORDER;
     },
-    add(slug: string, size: SizeKey) {
+    add(slug: string, size: SizeKey, qty = 1) {
+      const n = Math.max(1, Math.min(MAX_QTY, Math.round(qty)));
       const existing = state.lines.find((l) => l.slug === slug && l.size === size);
       set({
         ...state,
         lines: existing
-          ? state.lines.map((l) => (l === existing ? { ...l, qty: Math.min(MAX_QTY, l.qty + 1) } : l))
-          : [...state.lines, { slug, size, qty: 1 }],
+          ? state.lines.map((l) => (l === existing ? { ...l, qty: Math.min(MAX_QTY, l.qty + n) } : l))
+          : [...state.lines, { slug, size, qty: n }],
       });
     },
     setQty(slug: string, size: SizeKey, qty: number) {

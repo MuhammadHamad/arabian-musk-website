@@ -26,6 +26,7 @@ npm run build
 | Scent names and prices | `src/content/scents.ts` |
 | Questions and answers | `src/content/faqs.ts` |
 | Home page sections | `src/app/page.tsx` |
+| Colours, type, buttons | `src/app/globals.css` |
 
 Each scent has five prices: attar 12 ml and perfume 10, 30, 50 and 100 ml. `rank` is the scent's
 place by bottles sold in the shop's records (Sep 2025 to Sep 2026); the top 8 show a "Best seller"
@@ -33,6 +34,24 @@ badge. `inspiredBy` names the famous perfume a scent is modelled on and is shown
 "Inspired by …"; leave it out when unsure.
 
 A new scent needs a unique `slug`, which becomes its address: `/scents/<slug>`.
+
+## Photography
+
+Every image is a render of the shop's two bottle formats, made in Blender 4.2 (Cycles) by
+`scripts/render/scene.py`: light falls through a carved jaali arch onto a plaster wall. The perfume
+label is left blank and the site sets each scent's name and number on it, so 102 scents share one
+set of renders in `src/assets/renders/`.
+
+```bash
+blender -b --factory-startup --python scripts/render/scene.py -- perfume out.png 1.0 200
+```
+
+Shots: `perfume`, `attar`, `hero` (2400 × 1350), `hero_tall` (1200 × 1600). Each run prints where the
+label lands in the frame; those numbers live in `src/lib/renders.ts`. If the camera or bottle moves,
+update them. Convert the PNG to JPEG (`sips -s format jpeg -s formatOptions 86`) before committing.
+Real photographs of the shop's bottles can replace these files later.
+
+Design notes and the research behind them: `docs/design-direction.md`.
 
 ## Facts the copy relies on
 

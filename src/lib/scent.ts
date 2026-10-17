@@ -2,6 +2,8 @@ export type SizeKey = "attar12" | "perfume10" | "perfume30" | "perfume50" | "per
 
 export type Scent = {
   slug: string;
+  /** The scent's number on the shop's own price list. */
+  no: number;
   name: string;
   /** The well-known perfume this blend is modelled on. Set only where the name clearly refers to one. */
   inspiredBy?: string;
@@ -64,4 +66,21 @@ export function matchesSearch(scent: Scent, query: string): boolean {
   const q = searchKey(query);
   if (!q) return true;
   return [scent.name, scent.inspiredBy ?? "", ...(scent.aka ?? [])].some((t) => searchKey(t).includes(q));
+}
+
+const ARABIC_DIGITS = "٠١٢٣٤٥٦٧٨٩";
+
+/** 28 -> "٢٨", for the register numbers. */
+export function arabicNumeral(n: number): string {
+  return String(n).replace(/[0-9]/g, (d) => ARABIC_DIGITS[Number(d)]);
+}
+
+/** "N° 28" */
+export function registerNo(scent: Scent): string {
+  return `N° ${scent.no}`;
+}
+
+/** "From Rs 400" */
+export function fromPrice(scent: Scent): string {
+  return `From ${formatRs(lowestPrice(scent))}`;
 }

@@ -3,24 +3,26 @@
 import { useMemo, useState } from "react";
 import { scents } from "@/content/scents";
 import { SearchIcon, WhatsAppIcon } from "@/components/icons";
-import { ScentCard } from "@/components/scent-card";
+import { ProductCard } from "@/components/product-card";
 import { whatsappLink } from "@/lib/links";
 import { isBestSeller, matchesSearch, type Scent } from "@/lib/scent";
 
-type SortKey = "popular" | "price-asc" | "price-desc" | "name";
+type SortKey = "popular" | "price-asc" | "price-desc" | "name" | "number";
 
 const SORTS: { key: SortKey; label: string }[] = [
-  { key: "popular", label: "Most popular" },
-  { key: "price-asc", label: "Price: low to high" },
-  { key: "price-desc", label: "Price: high to low" },
-  { key: "name", label: "A to Z" },
+  { key: "popular", label: "Most loved" },
+  { key: "price-asc", label: "Price, low to high" },
+  { key: "price-desc", label: "Price, high to low" },
+  { key: "name", label: "Name, A to Z" },
+  { key: "number", label: "Register number" },
 ];
 
 const compare: Record<SortKey, (a: Scent, b: Scent) => number> = {
   popular: (a, b) => (a.rank ?? Infinity) - (b.rank ?? Infinity) || a.name.localeCompare(b.name),
-  "price-asc": (a, b) => a.prices.attar12 - b.prices.attar12 || a.prices.perfume30 - b.prices.perfume30 || a.name.localeCompare(b.name),
-  "price-desc": (a, b) => b.prices.attar12 - a.prices.attar12 || b.prices.perfume30 - a.prices.perfume30 || a.name.localeCompare(b.name),
+  "price-asc": (a, b) => a.prices.perfume10 - b.prices.perfume10 || a.prices.attar12 - b.prices.attar12 || a.name.localeCompare(b.name),
+  "price-desc": (a, b) => b.prices.perfume10 - a.prices.perfume10 || b.prices.attar12 - a.prices.attar12 || a.name.localeCompare(b.name),
   name: (a, b) => a.name.localeCompare(b.name),
+  number: (a, b) => a.no - b.no,
 };
 
 export function Catalogue() {
@@ -33,79 +35,75 @@ export function Catalogue() {
     [query, sort, bestOnly],
   );
 
-  const filtered = visible.length !== scents.length;
-
   return (
     <div>
-      <div className="z-30 -mx-4 border-b sm:sticky sm:top-16 border-sand-200 bg-sand-50/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          <label className="relative min-w-0 flex-1 basis-full sm:basis-auto">
+      <div className="z-30 border-y border-line bg-paper/95 backdrop-blur md:sticky md:top-[4.5rem]">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-8 gap-y-3 px-4 py-3 sm:px-8">
+          <label className="relative flex min-w-0 flex-1 basis-full items-center gap-3 border-b border-ink/25 py-2 focus-within:border-ink sm:basis-64">
+            <SearchIcon size={17} className="shrink-0 text-muted" />
             <span className="sr-only">Search scents</span>
-            <SearchIcon size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-500" />
             <input
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search a scent or a perfume it's inspired by"
-              className="w-full rounded-full border border-sand-300 bg-white py-2.5 pl-10 pr-4 text-[15px] placeholder:text-stone-500 focus:border-gold-500 focus:outline-none"
+              placeholder="Search a scent, or the perfume it recalls"
+              className="w-full bg-transparent text-[15px] placeholder:text-muted/80 focus:outline-none"
             />
           </label>
-          <label className="relative">
-            <span className="sr-only">Sort scents</span>
-            <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value as SortKey)}
-              className="appearance-none rounded-full border border-sand-300 bg-white py-2.5 pl-4 pr-9 text-[15px] focus:border-gold-500 focus:outline-none"
+          <div className="flex items-center gap-6">
+            <button
+              type="button"
+              aria-pressed={bestOnly}
+              onClick={() => setBestOnly((v) => !v)}
+              className={`caps py-2 transition ${bestOnly ? "text-ink underline decoration-1 underline-offset-[6px]" : "text-muted hover:text-ink"}`}
             >
-              {SORTS.map((s) => (
-                <option key={s.key} value={s.key}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-            <span aria-hidden className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-stone-500">
-              ▼
-            </span>
-          </label>
-          <button
-            type="button"
-            aria-pressed={bestOnly}
-            onClick={() => setBestOnly((v) => !v)}
-            className={`rounded-full border px-4 py-2.5 text-[15px] transition ${
-              bestOnly ? "border-gold-600 bg-gold-500 text-ink-950" : "border-sand-300 bg-white hover:border-gold-500"
-            }`}
-          >
-            Best sellers
-          </button>
+              Best sellers
+            </button>
+            <label className="caps flex items-center gap-2 text-muted">
+              <span>Sort</span>
+              <select
+                value={sort}
+                onChange={(e) => setSort(e.target.value as SortKey)}
+                className="cursor-pointer appearance-none bg-transparent py-2 pr-1 text-ink focus:outline-none"
+              >
+                {SORTS.map((s) => (
+                  <option key={s.key} value={s.key}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
         </div>
       </div>
 
-      <p className="mt-5 text-sm text-stone-600" aria-live="polite">
-        {filtered ? `Showing ${visible.length} of ${scents.length} scents` : `All ${scents.length} scents`}
-        {sort.startsWith("price") && " · sorted by the 12 ml attar price"}
-      </p>
+      <div className="mx-auto max-w-7xl px-4 sm:px-8">
+        <p className="caps mt-8 !text-[10.5px] text-muted" aria-live="polite">
+          {visible.length === scents.length ? `${scents.length} scents` : `${visible.length} of ${scents.length} scents`}
+        </p>
 
-      {visible.length > 0 ? (
-        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {visible.map((s) => (
-            <ScentCard key={s.slug} scent={s} headingLevel="h2" />
-          ))}
-        </div>
-      ) : (
-        <div className="mt-6 rounded-2xl border border-dashed border-sand-300 bg-white/60 px-6 py-12 text-center">
-          <p className="font-display text-2xl">No scent matches &ldquo;{query}&rdquo;.</p>
-          <p className="mt-2 text-stone-600">Our stock changes, so ask us. We may have it or something close.</p>
-          <a
-            href={whatsappLink(`Assalam o Alaikum Arabian Musk! Do you have ${query || "a scent"}?`)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-6 inline-flex items-center gap-2 rounded-full bg-ink-900 px-6 py-3 text-sm font-medium text-sand-50 transition hover:bg-ink-700"
-          >
-            <WhatsAppIcon size={18} />
-            Ask on WhatsApp
-          </a>
-        </div>
-      )}
+        {visible.length > 0 ? (
+          <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-12 md:grid-cols-3 md:gap-x-6 xl:grid-cols-4">
+            {visible.map((s, i) => (
+              <ProductCard key={s.slug} scent={s} headingLevel="h2" priority={i < 4} />
+            ))}
+          </div>
+        ) : (
+          <div className="py-24 text-center">
+            <p className="font-display text-3xl">Nothing called &ldquo;{query}&rdquo;, yet.</p>
+            <p className="mx-auto mt-3 max-w-md text-muted">Our stock changes, so ask us: we may have it, or something close.</p>
+            <a
+              href={whatsappLink(`Assalam o Alaikum Arabian Musk! Do you have ${query || "a scent"}?`)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-ink mt-8"
+            >
+              <WhatsAppIcon size={17} />
+              Ask on WhatsApp
+            </a>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
