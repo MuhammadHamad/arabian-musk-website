@@ -25,6 +25,7 @@ npm run build
 | WhatsApp number, address, hours, Instagram/Facebook/TikTok | `src/content/site.ts` (anything `null` is hidden) |
 | Scent names and prices | `src/content/scents.ts` |
 | Questions and answers | `src/content/faqs.ts` |
+| Collections (Best Sellers, Oud & Musk, …) | `src/content/collections.ts` |
 | Home page sections | `src/app/page.tsx` |
 | Colours, type, buttons | `src/app/globals.css` |
 
@@ -38,20 +39,22 @@ A new scent needs a unique `slug`, which becomes its address: `/scents/<slug>`.
 ## Photography
 
 Every image is a render of the shop's two bottle formats, made in Blender 4.2 (Cycles) by
-`scripts/render/scene.py`: light falls through a carved jaali arch onto a plaster wall. The perfume
-label is left blank and the site sets each scent's name and number on it, so 102 scents share one
-set of renders in `src/assets/renders/`.
+`scripts/render/scene.py`, in four settings: plaster with sunlight through a jaali, white marble,
+dark wood against an amber wall, and desert sand at dusk. The perfume label is left blank and the
+site sets each scent's name and number on it; each scent gets a setting from its number
+(`sceneFor` in `src/lib/scent.ts`), so 102 scents share six renders in `src/assets/renders/`.
 
 ```bash
-blender -b --factory-startup --python scripts/render/scene.py -- perfume out.png 1.0 200
+blender -b --factory-startup --python scripts/render/scene.py -- perfume out.png 1.0 160 marble
 ```
 
-Shots: `perfume`, `attar`, `hero` (2400 × 1350), `hero_tall` (1200 × 1600). Each run prints where the
-label lands in the frame; those numbers live in `src/lib/renders.ts`. If the camera or bottle moves,
-update them. Convert the PNG to JPEG (`sips -s format jpeg -s formatOptions 86`) before committing.
+Shots: `perfume`, `attar`, `hero` (2400 × 1350), `hero_tall` (1200 × 1600). Settings: `plaster`,
+`marble`, `wood`, `sand`, `amber` (heroes). Each run prints where the label lands in the frame; those
+numbers live in `src/lib/renders.ts`. The camera and bottle are the same in every setting, so one
+box serves all perfume renders; if the camera or bottle moves, update them. Convert the PNG to JPEG (`sips -s format jpeg -s formatOptions 86`) before committing.
 Real photographs of the shop's bottles can replace these files later.
 
-Design notes and the research behind them: `docs/design-direction.md`.
+The look follows aldeenfragrances.com at the owner's request; what was taken and what is ours is in `docs/design-direction.md`.
 
 ## Facts the copy relies on
 

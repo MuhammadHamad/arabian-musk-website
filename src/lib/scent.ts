@@ -84,3 +84,17 @@ export function registerNo(scent: Scent): string {
 export function fromPrice(scent: Scent): string {
   return `From ${formatRs(lowestPrice(scent))}`;
 }
+
+/** "Rs 400 – Rs 3,000" */
+export function priceRange(scent: Scent): string {
+  const values = Object.values(scent.prices);
+  return `${formatRs(Math.min(...values))} – ${formatRs(Math.max(...values))}`;
+}
+
+export type Scene = "plaster" | "marble" | "wood" | "sand";
+const SCENES: Scene[] = ["plaster", "marble", "wood", "sand"];
+
+/** Each scent is photographed in one of four settings, fixed by its number. */
+export function sceneFor(scent: Scent): Scene {
+  return SCENES[scent.no % SCENES.length];
+}

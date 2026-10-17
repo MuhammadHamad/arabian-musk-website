@@ -1,6 +1,7 @@
 /**
  * Where the blank black label sits in the perfume render (scripts/render/scene.py prints this),
- * as percentages of the image. The site sets each scent's name inside it.
+ * as percentages of the image. The site sets each scent's name inside it. The camera and bottle
+ * are the same in every setting, so one box serves all four perfume renders.
  */
 export const PERFUME_LABEL = { left: 42.42, top: 48.24, width: 15.16, height: 16.82 };
 

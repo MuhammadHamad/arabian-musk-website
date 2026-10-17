@@ -1,9 +1,10 @@
 """
 Arabian Musk product photography, rendered in Blender (Cycles).
 
-    blender -b --factory-startup --python scripts/render/scene.py -- <shot> <out.png> [scale] [samples]
+    blender -b --factory-startup --python scripts/render/scene.py -- <shot> <out.png> [scale] [samples] [setting]
 
-Shots: perfume, attar, hero, hero_tall, duo. The perfume label is left blank on purpose:
+Shots: perfume, attar, hero, hero_tall, duo.
+Settings: plaster (jaali wall, default), marble, wood (amber wall), sand (desert at dusk), amber (hero). The perfume label is left blank on purpose:
 the website sets each scent's name on it, so one render serves every scent.
 Prints the label's position in the frame (as % of width/height) for the site's CSS.
 """
@@ -20,6 +21,8 @@ SHOT = argv[0] if argv else "perfume"
 OUT = argv[1] if len(argv) > 1 else f"/tmp/{SHOT}.png"
 SCALE = float(argv[2]) if len(argv) > 2 else 1.0
 SAMPLES = int(argv[3]) if len(argv) > 3 else 256
+# Setting: plaster (jaali wall), marble, wood (amber glow), sand (desert at dusk), amber (hero).
+ENV = argv[4] if len(argv) > 4 else "plaster"
 
 # Palette (linear-ish sRGB values picked to match the site).
 PLASTER = (0.78, 0.63, 0.48)
@@ -107,7 +110,7 @@ def gold_mat():
 
 def onyx_mat():
     def b(nt, out):
-        p = principled(nt, **{"Base Color": (0.012, 0.010, 0.009, 1), "Roughness": 0.32, "Coat Weight": 0.3, "Coat Roughness": 0.2})
+        p = principled(nt, **{"Base Color": (0.012, 0.010, 0.009, 1), "Roughness": 0.45, "Coat Weight": 0.12, "Coat Roughness": 0.35})
         nt.links.new(p.outputs[0], out.inputs["Surface"])
     return mat("Onyx", b)
 
@@ -415,6 +418,193 @@ def camera(loc, look, lens=90, shift_y=0.0, res=(1200, 1500)):
     return cam
 
 
+# ---------------------------------------------------------------- other settings
+def marble_mat():
+    def b(nt, out):
+        p = principled(nt, **{"Roughness": 0.14, "Coat Weight": 0.35})
+        n = nt.nodes.new("ShaderNodeTexNoise")
+        n.inputs["Scale"].default_value = 3.0
+        n.inputs["Detail"].default_value = 10.0
+        w = nt.nodes.new("ShaderNodeTexWave")
+        w.inputs["Scale"].default_value = 2.2
+        w.inputs["Distortion"].default_value = 14.0
+        w.inputs["Detail"].default_value = 10.0
+        nt.links.new(n.outputs["Color"], w.inputs["Vector"])
+        r = nt.nodes.new("ShaderNodeValToRGB")
+        r.color_ramp.elements[0].position = 0.0
+        r.color_ramp.elements[0].color = (0.93, 0.92, 0.90, 1)
+        r.color_ramp.elements[1].position = 0.9
+        r.color_ramp.elements[1].color = (0.90, 0.89, 0.87, 1)
+        e = r.color_ramp.elements.new(1.0)
+        e.color = (0.52, 0.50, 0.48, 1)
+        nt.links.new(w.outputs["Fac"], r.inputs["Fac"])
+        nt.links.new(r.outputs["Color"], p.inputs["Base Color"])
+        nt.links.new(p.outputs[0], out.inputs["Surface"])
+    return mat("Marble", b)
+
+
+def wood_mat():
+    def b(nt, out):
+        p = principled(nt, **{"Roughness": 0.55, "Coat Weight": 0.08})
+        tc = nt.nodes.new("ShaderNodeTexCoord")
+        mp = nt.nodes.new("ShaderNodeMapping")
+        mp.inputs["Scale"].default_value = (2.0, 60.0, 60.0)
+        nt.links.new(tc.outputs["Object"], mp.inputs["Vector"])
+        w = nt.nodes.new("ShaderNodeTexNoise")
+        w.inputs["Scale"].default_value = 3.0
+        w.inputs["Detail"].default_value = 12.0
+        w.inputs["Roughness"].default_value = 0.6
+        nt.links.new(mp.outputs["Vector"], w.inputs["Vector"])
+        r = nt.nodes.new("ShaderNodeValToRGB")
+        r.color_ramp.elements[0].position = 0.3
+        r.color_ramp.elements[0].color = (0.035, 0.016, 0.008, 1)
+        r.color_ramp.elements[1].position = 0.7
+        r.color_ramp.elements[1].color = (0.20, 0.095, 0.04, 1)
+        nt.links.new(w.outputs["Fac"], r.inputs["Fac"])
+        nt.links.new(r.outputs["Color"], p.inputs["Base Color"])
+        bm = nt.nodes.new("ShaderNodeBump")
+        bm.inputs["Strength"].default_value = 0.05
+        nt.links.new(w.outputs["Fac"], bm.inputs["Height"])
+        nt.links.new(bm.outputs["Normal"], p.inputs["Normal"])
+        nt.links.new(p.outputs[0], out.inputs["Surface"])
+    return mat("Wood", b)
+
+
+def sand_mat():
+    def b(nt, out):
+        p = principled(nt, **{"Base Color": (0.86, 0.60, 0.34, 1), "Roughness": 0.96})
+        w = nt.nodes.new("ShaderNodeTexWave")
+        w.bands_direction = "Y"
+        w.inputs["Scale"].default_value = 26.0
+        w.inputs["Distortion"].default_value = 3.0
+        w.inputs["Detail"].default_value = 3.0
+        g = nt.nodes.new("ShaderNodeTexNoise")
+        g.inputs["Scale"].default_value = 900.0
+        mix = nt.nodes.new("ShaderNodeMath")
+        mix.operation = "ADD"
+        nt.links.new(w.outputs["Fac"], mix.inputs[0])
+        nt.links.new(g.outputs["Fac"], mix.inputs[1])
+        bm = nt.nodes.new("ShaderNodeBump")
+        bm.inputs["Strength"].default_value = 0.35
+        nt.links.new(mix.outputs[0], bm.inputs["Height"])
+        nt.links.new(bm.outputs["Normal"], p.inputs["Normal"])
+        nt.links.new(p.outputs[0], out.inputs["Surface"])
+    return mat("Sand", b)
+
+
+def sky_mat():
+    def b(nt, out):
+        tc = nt.nodes.new("ShaderNodeTexCoord")
+        sep = nt.nodes.new("ShaderNodeSeparateXYZ")
+        nt.links.new(tc.outputs["Generated"], sep.inputs[0])
+        r = nt.nodes.new("ShaderNodeValToRGB")
+        r.color_ramp.elements[0].position = 0.0
+        r.color_ramp.elements[0].color = (1.0, 0.50, 0.24, 1)
+        mid = r.color_ramp.elements.new(0.32)
+        mid.color = (0.80, 0.38, 0.36, 1)
+        r.color_ramp.elements[-1].position = 1.0
+        r.color_ramp.elements[-1].color = (0.13, 0.13, 0.30, 1)
+        nt.links.new(sep.outputs["Y"], r.inputs["Fac"])
+        em = nt.nodes.new("ShaderNodeEmission")
+        em.inputs["Strength"].default_value = 1.6
+        nt.links.new(r.outputs["Color"], em.inputs["Color"])
+        nt.links.new(em.outputs[0], out.inputs["Surface"])
+    return mat("Sky", b)
+
+
+def area_at(name, loc, target, size, energy, color=(1, 0.93, 0.85), size_y=None):
+    bpy.ops.object.light_add(type="AREA", location=loc)
+    l = bpy.context.object
+    l.name = name
+    l.data.shape = "RECTANGLE"
+    l.data.size = size
+    l.data.size_y = size_y or size
+    l.data.energy = energy
+    l.data.color = color
+    l.rotation_euler = (Vector(target) - l.location).to_track_quat("-Z", "Y").to_euler()
+    return l
+
+
+def world(color, strength):
+    w = bpy.data.worlds.new("World")
+    w.use_nodes = True
+    bg = w.node_tree.nodes["Background"]
+    bg.inputs["Color"].default_value = (*color, 1)
+    bg.inputs["Strength"].default_value = strength
+    scene.world = w
+
+
+def glass_rims(front=8.0):
+    for side in (-1, 1):
+        area_at(f"Rim{side}", (0.20 * side, 0.30, 0.10), (0, 0, 0.05), 0.04, 5, size_y=0.5)
+    area_at("Front", (0.0, -0.9, 0.12), (0, 0, 0.05), 0.35, front)
+
+
+def set_marble():
+    # Pale plaster wall, marble slab, soft daylight from a window on the left.
+    MATS["plaster"] = textured_mat("PalePlaster", (0.86, 0.84, 0.81), 0.9, bump=0.04, scale=90)
+    build_set()
+    bpy.data.objects["Plinth"].data.materials[0] = MATS["marble"]
+    area_at("Window", (-0.7, -0.25, 0.45), (0, 0.1, 0.05), 0.9, 42, color=(1.0, 0.97, 0.92))
+    area_at("Fill", (0.6, -0.5, 0.2), (0, 0, 0.05), 0.8, 5, color=(0.95, 0.96, 1.0))
+    glass_rims()
+    world((0.8, 0.8, 0.82), 0.22)
+
+
+def set_wood(jaali=False, target_x=0.045):
+    # Dark wood block against a warm amber wall glowing behind the bottle.
+    MATS["plaster"] = textured_mat("AmberWall", (0.22, 0.08, 0.02), 0.92, bump=0.05, scale=90)
+    build_set(width=2.4)
+    bpy.data.objects["Plinth"].data.materials[0] = MATS["wood"]
+    area_at("Glow", (target_x, 0.12, 0.26), (target_x, 0.45, 0.10), 0.22, 8, color=(1.0, 0.52, 0.16))
+    area_at("Key", (-0.55, -0.5, 0.42), (0, 0, 0.05), 0.5, 4.5, color=(1.0, 0.85, 0.65))
+    glass_rims()
+    world((0.25, 0.10, 0.04), 0.05)
+    if jaali:
+        lights_jaali_only(target_x)
+
+
+def lights_jaali_only(target_x):
+    bpy.ops.object.light_add(type="SPOT", location=(0.42, -0.72, 0.92))
+    sun = bpy.context.object
+    sun.data.energy = 520
+    sun.data.spot_size = math.radians(13.5)
+    sun.data.spot_blend = 0.08
+    sun.data.shadow_soft_size = 0.004
+    sun.data.color = (1.0, 0.72, 0.42)
+    target = Vector((target_x, 0.45, 0.15))
+    sun.rotation_euler = (target - sun.location).to_track_quat("-Z", "Y").to_euler()
+    mid = sun.location.lerp(target, 0.78)
+    bpy.ops.mesh.primitive_plane_add(size=0.27, location=mid)
+    scr = bpy.context.object
+    scr.rotation_euler = (target - sun.location).to_track_quat("Z", "Y").to_euler()
+    add(scr, MATS["screen"])
+    scr.visible_camera = False
+    scr.visible_glossy = False
+    scr.visible_transmission = False
+
+
+def set_sand():
+    # Rippled sand to the horizon under a dusk sky; low sun from behind.
+    bpy.ops.mesh.primitive_plane_add(size=8, location=(0, 3.5, 0))
+    floor = bpy.context.object
+    add(floor, MATS["sand"])
+    bpy.ops.mesh.primitive_plane_add(size=1, location=(0, 7.4, 1.2))
+    sky = bpy.context.object
+    sky.scale = (14, 5, 1)
+    sky.rotation_euler = (math.radians(90), 0, 0)
+    add(sky, MATS["sky"])
+    bpy.ops.object.light_add(type="SUN")
+    sun = bpy.context.object
+    sun.data.energy = 2.6
+    sun.data.angle = math.radians(1.5)
+    sun.data.color = (1.0, 0.70, 0.45)
+    sun.rotation_euler = (Vector((0, 0, 0)) - Vector((-1.6, -0.9, 0.7))).to_track_quat("-Z", "Y").to_euler()
+    area_at("Fill", (0.3, -0.8, 0.25), (0, 0, 0.05), 0.8, 4, color=(0.95, 0.9, 1.0))
+    glass_rims(front=3.5)
+    world((0.75, 0.52, 0.45), 0.45)
+
+
 # ---------------------------------------------------------------- shots
 MATS = {
     "glass": glass_mat(),
@@ -426,9 +616,25 @@ MATS = {
     "stone": textured_mat("Stone", STONE, 0.75, bump=0.03, scale=140, veins=True),
     "label": image_mat("Label", label_image(), roughness=0.78),
     "screen": screen_mat(lattice_image()),
+    "marble": marble_mat(),
+    "wood": wood_mat(),
+    "sand": sand_mat(),
+    "sky": sky_mat(),
 }
 HERO_DX = 0.095  # the wide hero keeps the left of the frame clear for the headline
-if SHOT == "hero":
+if ENV == "marble":
+    set_marble()
+elif ENV == "wood":
+    set_wood()
+elif ENV == "sand":
+    set_sand()
+elif ENV == "amber":
+    tx = HERO_DX + 0.03 if SHOT == "hero" else 0.03
+    set_wood(jaali=True, target_x=tx)
+    if SHOT == "hero":
+        bpy.data.objects["Plinth"].location.x = HERO_DX
+        bpy.data.objects["Plinth"].scale.x = 1.3
+elif SHOT == "hero":
     build_set(width=2.2)
     box("Plinth2", (0.36, 0.20, 0.09), (HERO_DX, 0.02, -0.045), MATS["stone"], bevel=0.002)
     bpy.data.objects["Plinth"].hide_render = True

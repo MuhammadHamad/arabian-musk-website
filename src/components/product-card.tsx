@@ -1,38 +1,38 @@
 import Link from "next/link";
 import { QuickAdd } from "@/components/quick-add";
 import { ScentImage } from "@/components/scent-image";
-import { fromPrice, isBestSeller, type Scent } from "@/lib/scent";
+import { isBestSeller, priceRange, type Scent } from "@/lib/scent";
 
 const CARD_SIZES = "(min-width: 1280px) 22vw, (min-width: 768px) 31vw, 48vw";
 
-export function ProductCard({ scent, priority, headingLevel: H = "h3" }: { scent: Scent; priority?: boolean; headingLevel?: "h2" | "h3" }) {
+/** Image, label, name, price range and an amber "Select options" button. */
+export function ProductCard({
+  scent,
+  priority,
+  headingLevel: H = "h3",
+  align = "center",
+}: {
+  scent: Scent;
+  priority?: boolean;
+  headingLevel?: "h2" | "h3";
+  align?: "center" | "left";
+}) {
   const href = `/scents/${scent.slug}`;
+  const label = isBestSeller(scent) ? "Best Seller" : scent.inspiredBy ? "Inspired Perfume" : "Attar & Perfume";
   return (
-    <article className="group">
-      <div className="relative">
-        <Link href={href} tabIndex={-1} aria-hidden className="block">
-          <ScentImage scent={scent} sizes={CARD_SIZES} priority={priority} zoom={1.32} />
-          <ScentImage
-            scent={scent}
-            variant="attar"
-            sizes={CARD_SIZES}
-            zoom={1.25}
-            className="!absolute inset-0 opacity-0 transition-opacity duration-700 ease-[var(--ease-lux)] group-hover:opacity-100"
-          />
-        </Link>
-        {isBestSeller(scent) && (
-          <span className="caps pointer-events-none absolute left-3 top-3 bg-paper/90 px-2 py-1 !text-[10px] text-ink">Best seller</span>
-        )}
-        <QuickAdd scent={scent} />
-      </div>
-      <Link href={href} className="mt-4 block text-center">
-        <span className="caps block !text-[10.5px] text-muted">N° {scent.no}</span>
-        <H className="mt-1.5 font-display text-[1.3rem] leading-tight sm:text-[1.4rem]">{scent.name}</H>
-        <span className="mt-1 block px-2 text-[13px] leading-snug text-muted">
-          {scent.inspiredBy ? `Inspired by ${scent.inspiredBy}` : "Attar & perfume"}
-        </span>
-        <span className="mt-2 block text-[14px] tabular-nums">{fromPrice(scent)}</span>
+    <article className={`group flex flex-col ${align === "center" ? "items-center text-center" : "items-start text-left"}`}>
+      <Link href={href} tabIndex={-1} aria-hidden className="block w-full overflow-hidden">
+        <ScentImage scent={scent} sizes={CARD_SIZES} priority={priority} square zoom={1.5} className="transition duration-700 group-hover:scale-[1.04]" />
       </Link>
+      <p className="mt-4 text-[14.5px] text-muted">{label}</p>
+      <H className="mt-1 font-display text-[1.45rem] font-bold leading-tight sm:text-[1.55rem]">
+        <Link href={href} className="transition hover:text-amber">
+          {scent.name}
+        </Link>
+      </H>
+      {scent.inspiredBy && <p className="mt-1 text-[13.5px] leading-snug text-muted">Impression of {scent.inspiredBy}</p>}
+      <p className="mt-2 text-[15.5px] tabular-nums text-body">{priceRange(scent)}</p>
+      <QuickAdd scent={scent} />
     </article>
   );
 }

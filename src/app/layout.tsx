@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Aref_Ruqaa, Bodoni_Moda, Jost } from "next/font/google";
+import { Aref_Ruqaa, Cormorant_Garamond, DM_Sans, Lato } from "next/font/google";
 import "./globals.css";
 import { JsonLd } from "@/components/json-ld";
 import { OrderProvider } from "@/components/order-provider";
@@ -9,15 +9,17 @@ import { AnnouncementBar, SiteHeader } from "@/components/site-header";
 import { SITE_URL, site } from "@/content/site";
 import { storeSchema, websiteSchema } from "@/lib/schema";
 
-const bodoni = Bodoni_Moda({
+const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
+  weight: ["500", "600", "700"],
   style: ["normal", "italic"],
-  axes: ["opsz"],
-  variable: "--font-bodoni",
+  variable: "--font-cormorant",
   display: "swap",
 });
 
-const jost = Jost({ subsets: ["latin"], variable: "--font-jost", display: "swap" });
+const lato = Lato({ subsets: ["latin"], weight: ["300", "400", "700"], variable: "--font-lato", display: "swap" });
+
+const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dmsans", display: "swap" });
 
 // Only the Arabic wordmark uses this, so it is not preloaded.
 const ruqaa = Aref_Ruqaa({
@@ -63,7 +65,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f6f1e9",
+  themeColor: "#8c4e03",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -71,14 +73,14 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en-PK" className={`${bodoni.variable} ${jost.variable} ${ruqaa.variable}`} suppressHydrationWarning>
+    <html lang="en-PK" className={`${cormorant.variable} ${lato.variable} ${dmSans.variable} ${ruqaa.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: revealBootScript }} />
       </head>
       <body className="min-h-dvh">
         <a
           href="#main"
-          className="sr-only z-[100] bg-ink px-5 py-3 text-paper focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
+          className="sr-only z-[100] bg-amber px-5 py-3 text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
         >
           Skip to content
         </a>

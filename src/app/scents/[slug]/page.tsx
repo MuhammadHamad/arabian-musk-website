@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import heroWide from "@/assets/renders/hero-amber.jpg";
 import { getScent, scents, similarlyPriced } from "@/content/catalogue";
+import { collections } from "@/content/collections";
 import { WhatsAppIcon } from "@/components/icons";
 import { JsonLd } from "@/components/json-ld";
 import { ProductCard } from "@/components/product-card";
 import { ScentImage } from "@/components/scent-image";
 import { SizePicker } from "@/components/size-picker";
 import { scentQuestion, whatsappLink } from "@/lib/links";
-import { arabicNumeral, formatRs, isBestSeller, type Scent } from "@/lib/scent";
+import { arabicNumeral, formatRs, priceRange, type Scent } from "@/lib/scent";
 import { breadcrumbSchema, productSchema } from "@/lib/schema";
 import { pageMetadata } from "@/lib/seo";
 
@@ -30,127 +33,125 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!scent) return {};
   return pageMetadata({
     title: `${scent.name} Attar & Perfume Price`,
-    description: `${scent.name}${scent.inspiredBy ? ` (inspired by ${scent.inspiredBy})` : ""} at Arabian Musk, Peshawar: ${summary(scent)}. Order on WhatsApp.`,
+    description: `${scent.name}${scent.inspiredBy ? ` (impression of ${scent.inspiredBy})` : ""} at Arabian Musk, Peshawar: ${summary(scent)}. Order on WhatsApp.`,
     path: `/scents/${scent.slug}`,
     ownShareImage: true,
   });
 }
 
-const GALLERY_SIZES = "(min-width: 1024px) 50vw, 100vw";
-
 export default async function ScentPage({ params }: Props) {
   const scent = getScent((await params).slug);
   if (!scent) notFound();
-  const best = isBestSeller(scent);
+  const groups = collections.filter((c) => c.match(scent));
 
-  const about = scent.inspiredBy
-    ? `Our impression of ${scent.inspiredBy}. It is not the original branded perfume, and we are not connected to its maker.`
-    : `${scent.name} is one of the oils on our register, made as a pure attar or a perfume.`;
-
-  const details: [string, React.ReactNode][] = [
-    ["About this scent", <p key="a">{about}{best && " It is one of the scents our customers choose most."}</p>],
-    [
-      "Attar or perfume",
-      <p key="b">
-        Attar is pure perfume oil with no alcohol: touched on and close to the skin. Perfume is the same oil blended
-        into a spray at 40%, extrait strength, and carries further. Attar comes in 12 ml, with smaller sizes on request.
-      </p>,
-    ],
-    [
-      "Mixing and gift boxes",
-      <p key="c">
-        We can blend {scent.name} with another oil in one bottle, in the proportion you like: add both and tell us in the
-        order note. Any bottle can go in a gift box; tick it when you send your order.
-      </p>,
-    ],
-    [
-      "How ordering works",
-      <p key="d">
-        Your order goes to us on WhatsApp with every size and the total. We confirm stock and the final price before you
-        pay, and arrange how it reaches you.
-      </p>,
-    ],
+  const facts: [string, string][] = [
+    ["Attar", `Pure perfume oil with no alcohol. 12 ml at ${formatRs(scent.prices.attar12)}; smaller sizes on request.`],
+    ["Perfume", `A spray with 40% perfume oil, extrait strength. 10, 30, 50 and 100 ml.`],
+    ...(scent.inspiredBy ? ([["Inspired by", `${scent.inspiredBy}. Our impression, not the original branded perfume.`]] as [string, string][]) : []),
+    ["Register number", `N° ${scent.no} on our shop's price list.`],
+    ["Mixing", "We can blend it with another oil in one bottle, in the proportion you like."],
+    ["Gift box", "Any bottle can go out in a gift box, on request."],
   ];
 
   return (
     <>
-      <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-8">
-        <nav aria-label="Breadcrumb" className="caps !text-[10.5px] text-muted">
-          <Link href="/" className="hover:text-ink">Home</Link>
-          <span aria-hidden className="px-2">/</span>
-          <Link href="/scents" className="hover:text-ink">Collection</Link>
-          <span aria-hidden className="px-2">/</span>
-          <span className="text-ink">{scent.name}</span>
-        </nav>
+      <div aria-hidden className="mx-auto max-w-[75rem] sm:px-5">
+        <div className="slant-bottom-sm relative h-40 overflow-hidden sm:h-64">
+          <Image src={heroWide} alt="" fill priority placeholder="blur" sizes="(min-width: 1200px) 1200px, 100vw" className="object-cover object-[50%_40%]" />
+          <div className="absolute inset-0 bg-black/30" />
+        </div>
       </div>
 
-      <section className="mx-auto grid max-w-7xl gap-10 px-4 pb-20 pt-6 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
-        {/* Gallery: stacked on large screens, swiped on phones */}
-        <div className="-mx-4 flex snap-x snap-mandatory overflow-x-auto sm:mx-0 lg:block lg:space-y-4 lg:overflow-visible" aria-label="Images">
-          <ScentImage scent={scent} sizes={GALLERY_SIZES} priority className="w-full shrink-0 snap-center" />
-          <ScentImage scent={scent} variant="attar" sizes={GALLERY_SIZES} className="w-full shrink-0 snap-center" />
+      <section className="mx-auto grid max-w-[75rem] gap-10 px-5 pb-16 pt-10 lg:grid-cols-2 lg:gap-14">
+        <div>
+          <ScentImage scent={scent} priority zoom={1.12} sizes="(min-width: 1024px) 560px, 100vw" />
+          <div className="mt-4 grid grid-cols-3 gap-3">
+            <ScentImage scent={scent} square zoom={1.6} sizes="180px" />
+            <ScentImage scent={scent} variant="attar" scene="plaster" square zoom={1.3} sizes="180px" />
+            <ScentImage scent={scent} variant="attar" scene="wood" square zoom={1.3} sizes="180px" />
+          </div>
         </div>
 
-        <div className="min-w-0 lg:sticky lg:top-28 lg:self-start">
-          <p className="caps flex items-center gap-3 text-muted">
-            <span>N° {scent.no}</span>
-            <span lang="ar" className="font-arabic text-2xl leading-none normal-case tracking-normal text-brass">
+        <div>
+          <nav aria-label="Breadcrumb" className="text-[14px] text-muted">
+            <Link href="/" className="hover:text-amber">Home</Link>
+            <span aria-hidden className="px-2">/</span>
+            <Link href="/scents" className="hover:text-amber">Shop</Link>
+            <span aria-hidden className="px-2">/</span>
+            <span className="text-ink">{scent.name}</span>
+          </nav>
+          <h1 className="mt-4 text-[2.4rem] leading-tight sm:text-[2.8rem]">
+            Arabian Musk – {scent.name}
+            {scent.inspiredBy && <span className="block text-[1.5rem] font-semibold text-body">(Impression of {scent.inspiredBy})</span>}
+          </h1>
+          <p className="mt-4 font-display text-[1.9rem] font-bold tabular-nums text-ink">{priceRange(scent)}</p>
+          <p className="mt-2 flex items-center gap-2 text-[14.5px] text-muted">
+            N° {scent.no}
+            <span lang="ar" className="font-arabic text-lg text-amber">
               {arabicNumeral(scent.no)}
             </span>
-            {best && <span className="border border-line px-2 py-0.5 !text-[10px] text-ink">Best seller</span>}
           </p>
-          <h1 className="mt-4 font-display text-5xl font-normal leading-[1.02] sm:text-6xl">{scent.name}</h1>
-          <p className="mt-3 text-[16px] text-muted">{scent.inspiredBy ? `Inspired by ${scent.inspiredBy}` : "Attar & perfume"}</p>
 
-          <div className="mt-8 border-t border-line pt-8">
+          <div className="mt-6">
             <SizePicker scent={scent} />
           </div>
+
+          <ul className="mt-8 list-disc space-y-2.5 pl-5 text-[16px] leading-relaxed marker:text-amber">
+            {facts.map(([k, v]) => (
+              <li key={k}>
+                <strong className="text-ink">{k}:</strong> {v}
+              </li>
+            ))}
+          </ul>
 
           <a
             href={whatsappLink(scentQuestion(scent.name))}
             target="_blank"
             rel="noopener noreferrer"
-            className="caps mt-6 inline-flex items-center gap-2 text-ink-soft transition hover:text-ink"
+            className="mt-7 inline-flex items-center gap-2 text-[15px] font-bold text-amber underline underline-offset-4"
           >
-            <WhatsAppIcon size={15} /> <span className="link-line">Ask us about {scent.name}</span>
+            <WhatsAppIcon size={17} /> Ask us about {scent.name} on WhatsApp
           </a>
 
-          <ul className="mt-8 grid grid-cols-3 border-y border-line text-center text-[12.5px] text-muted">
-            <li className="py-4">40% oil in every perfume</li>
-            <li className="border-x border-line py-4">Alcohol-free attar</li>
-            <li className="py-4">Gift box on request</li>
-          </ul>
-
-          <div className="mt-2 divide-y divide-line border-b border-line">
-            {details.map(([title, body], i) => (
-              <details key={title} className="group" open={i === 0}>
-                <summary className="caps flex cursor-pointer list-none items-center justify-between py-5 [&::-webkit-details-marker]:hidden">
-                  {title}
-                  <span aria-hidden className="text-lg leading-none text-brass transition duration-500 group-open:rotate-45">+</span>
-                </summary>
-                <div className="pb-6 text-[15.5px] leading-relaxed text-ink-soft">{body}</div>
-              </details>
-            ))}
-          </div>
-          <p className="mt-4 text-[12px] text-muted/80">Bottles shown are rendered illustrations of our attar and perfume formats.</p>
+          {groups.length > 0 && (
+            <p className="mt-7 border-t border-line pt-5 text-[15px]">
+              <strong className="text-ink">Category</strong>{" "}
+              {groups.map((g, i) => (
+                <span key={g.slug}>
+                  {i > 0 && ", "}
+                  <Link href={`/collections/${g.slug}`} className="hover:text-amber">
+                    {g.title}
+                  </Link>
+                </span>
+              ))}
+            </p>
+          )}
         </div>
       </section>
 
-      <section className="border-t border-line bg-plaster/50 py-20 sm:py-24" aria-labelledby="similar-title">
-        <div className="mx-auto max-w-7xl px-4 sm:px-8">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <h2 id="similar-title" className="font-display text-4xl font-normal">
-              At a similar price
-            </h2>
-            <Link href="/scents" className="caps link-line">
-              The full collection
-            </Link>
-          </div>
-          <div className="mt-10 grid grid-cols-2 gap-x-4 gap-y-12 md:grid-cols-3 md:gap-x-6 xl:grid-cols-4">
-            {similarlyPriced(scent).map((s) => (
-              <ProductCard key={s.slug} scent={s} />
-            ))}
-          </div>
+      <section className="mx-auto max-w-[75rem] px-5" aria-labelledby="desc-title">
+        <div className="border-t border-line pt-12">
+          <h2 id="desc-title" className="text-[2rem]">
+            Description
+          </h2>
+          <p className="mt-4 max-w-3xl text-[16.5px] leading-relaxed">
+            {scent.inspiredBy
+              ? `Arabian Musk's ${scent.name} is our impression of ${scent.inspiredBy}. Wear it as a pure, alcohol-free attar that stays close to the skin, or as a perfume made with 40% oil that carries further. It is not the original branded perfume, and we are not connected to its maker.`
+              : `${scent.name} is N° ${scent.no} on our register. Wear it as a pure, alcohol-free attar that stays close to the skin, or as a perfume made with 40% oil that carries further.`}{" "}
+            Every bottle is poured at our shop at Malogo Chowk, Jhagra, Peshawar, and we confirm stock and the total on WhatsApp before you pay.
+          </p>
+          <p className="mt-4 text-[13px] text-muted">Bottles shown are rendered illustrations of our attar and perfume formats.</p>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-[75rem] px-5 py-20" aria-labelledby="related-title">
+        <h2 id="related-title" className="text-[2.2rem]">
+          Related products
+        </h2>
+        <div className="mt-10 grid grid-cols-2 gap-x-5 gap-y-14 lg:grid-cols-4 lg:gap-x-8">
+          {similarlyPriced(scent).map((s) => (
+            <ProductCard key={s.slug} scent={s} align="left" />
+          ))}
         </div>
       </section>
 
@@ -159,7 +160,7 @@ export default async function ScentPage({ params }: Props) {
           productSchema(scent),
           breadcrumbSchema([
             { name: "Home", path: "/" },
-            { name: "The collection", path: "/scents" },
+            { name: "Shop", path: "/scents" },
             { name: scent.name, path: `/scents/${scent.slug}` },
           ]),
         ]}

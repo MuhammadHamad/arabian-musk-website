@@ -6,9 +6,9 @@ export const contentType = "image/png";
 
 export default function Image() {
   return renderHomeShare({
-    eyebrow: "Attar & perfume house",
-    title: "Pure attar. Rich perfume.",
+    eyebrow: "Arabian Musk · Peshawar",
+    title: "Attar & Perfume",
     subtitle: "More than a hundred scents, as alcohol-free attar or perfume with 40% oil.",
-    footer: "Malogo Chowk, Jhagra, Peshawar",
+    footer: "Shop now",
   });
 }

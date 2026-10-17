@@ -3,15 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import attarRender from "@/assets/renders/attar.jpg";
-import perfumeRender from "@/assets/renders/perfume.jpg";
 import { scents } from "@/content/scents";
 import { BagIcon, CloseIcon, MinusIcon, PlusIcon, WhatsAppIcon } from "@/components/icons";
+import { ATTAR_RENDERS, PERFUME_BY_SCENE } from "@/components/scent-image";
 import { SizePicker } from "@/components/size-picker";
 import { whatsappLink } from "@/lib/links";
 import { orderMessage, priceLines } from "@/lib/order-message";
 import { createOrderStore } from "@/lib/order-store";
-import { formatRs, sizeLabel, sizeOf, type Scent, type SizeKey } from "@/lib/scent";
+import { formatRs, priceRange, sceneFor, sizeLabel, sizeOf, type Scent, type SizeKey } from "@/lib/scent";
 
 const BY_SLUG = new Map(scents.map((s) => [s.slug, s]));
 const store = createOrderStore(new Set(BY_SLUG.keys()));
@@ -82,18 +81,18 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
         <button
           type="button"
           onClick={openOrder}
-          className="fixed inset-x-3 bottom-3 z-40 flex items-center gap-3 bg-ink py-3.5 pl-5 pr-4 text-left text-paper shadow-[0_18px_40px_-12px_rgba(23,17,13,0.55)] transition hover:bg-oud sm:inset-x-auto sm:bottom-6 sm:right-6 sm:min-w-[22rem]"
+          className="fixed inset-x-3 bottom-3 z-40 flex items-center gap-3 bg-amber py-3.5 pl-5 pr-4 text-left text-white shadow-[0_18px_40px_-12px_rgba(0,0,0,0.45)] transition hover:bg-amber-deep sm:inset-x-auto sm:bottom-6 sm:right-6 sm:min-w-[22rem]"
         >
           {toast ? (
             <span key={toast.id} className="fade-in flex min-w-0 flex-1 items-center gap-2.5">
-              <span className="caps shrink-0 text-gold">Added</span>
+              <span className="eyebrow shrink-0 !text-[12px]">Added</span>
               <span className="truncate text-[14px]">{toast.text}</span>
             </span>
           ) : (
             <span className="flex flex-1 items-center gap-3">
-              <BagIcon size={18} className="shrink-0 text-gold" />
-              <span className="caps">Your order</span>
-              <span className="text-[13px] text-paper/60">
+              <BagIcon size={18} className="shrink-0" />
+              <span className="eyebrow !text-[12px]">Your order</span>
+              <span className="text-[13px] text-white/75">
                 {count} {count === 1 ? "item" : "items"}
               </span>
             </span>
@@ -115,15 +114,16 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
         {picking && (
           <div className="p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:p-7">
             <div className="flex items-start gap-4">
-              <div className="relative h-24 w-20 shrink-0 overflow-hidden bg-plaster">
-                <Image src={perfumeRender} alt="" fill sizes="120px" className="scale-[1.7] object-cover" />
+              <div className="relative h-24 w-20 shrink-0 overflow-hidden bg-cream">
+                <Image src={PERFUME_BY_SCENE[sceneFor(picking)]} alt="" fill sizes="120px" className="scale-[1.7] object-cover" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="caps !text-[10.5px] text-muted">N° {picking.no}</p>
-                <h2 id="sheet-title" className="mt-1 font-display text-2xl leading-tight">
+                <p className="text-[13px] text-muted">N° {picking.no}</p>
+                <h2 id="sheet-title" className="mt-0.5 font-display text-[1.7rem] leading-tight">
                   {picking.name}
                 </h2>
-                {picking.inspiredBy && <p className="mt-0.5 text-[13px] text-muted">Inspired by {picking.inspiredBy}</p>}
+                {picking.inspiredBy && <p className="mt-0.5 text-[13px] text-muted">Impression of {picking.inspiredBy}</p>}
+                <p className="mt-1 text-[15px] tabular-nums">{priceRange(picking)}</p>
               </div>
               <button
                 type="button"
@@ -140,7 +140,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
             <Link
               href={`/scents/${picking.slug}`}
               onClick={() => sheetRef.current?.close()}
-              className="link-line caps mt-5 inline-block !text-[11px] text-muted"
+              className="mt-5 inline-block text-[14px] text-amber underline underline-offset-4"
             >
               View the scent
             </Link>
@@ -160,8 +160,8 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
       >
         <div className="flex h-full flex-col">
           <div className="flex items-center justify-between border-b border-line px-6 py-5">
-            <h2 id="order-title" className="caps">
-              Your order {count > 0 && <span className="text-muted">({count})</span>}
+            <h2 id="order-title" className="font-display text-[1.6rem]">
+              Your order {count > 0 && <span className="font-sans text-base font-normal text-muted">({count})</span>}
             </h2>
             <button
               type="button"
@@ -176,10 +176,10 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
           <div className="flex-1 overflow-y-auto px-6">
             {lines.length === 0 ? (
               <div className="py-16 text-center">
-                <p className="font-display text-2xl">Your order is empty</p>
+                <p className="font-display text-[1.7rem]">Your order is empty</p>
                 <p className="mx-auto mt-3 max-w-xs text-[15px] text-muted">Choose a scent and a size, and it will wait for you here.</p>
-                <Link href="/scents" onClick={() => drawerRef.current?.close()} className="btn btn-ink mt-8">
-                  Discover the collection
+                <Link href="/scents" onClick={() => drawerRef.current?.close()} className="btn btn-amber mt-8">
+                  Shop now
                 </Link>
               </div>
             ) : (
@@ -189,15 +189,15 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
                     const attar = sizeOf(l.size).kind === "Attar";
                     return (
                       <li key={`${l.scent.slug}-${l.size}`} className="flex gap-4 py-5">
-                        <div className="relative h-24 w-[4.75rem] shrink-0 overflow-hidden bg-plaster">
-                          <Image src={attar ? attarRender : perfumeRender} alt="" fill sizes="120px" className="scale-[1.7] object-cover" />
+                        <div className="relative h-24 w-[4.75rem] shrink-0 overflow-hidden bg-cream">
+                          <Image src={attar ? ATTAR_RENDERS.plaster : PERFUME_BY_SCENE[sceneFor(l.scent)]} alt="" fill sizes="120px" className="scale-[1.7] object-cover" />
                         </div>
                         <div className="flex min-w-0 flex-1 flex-col">
                           <div className="flex items-start justify-between gap-3">
                             <Link
                               href={`/scents/${l.scent.slug}`}
                               onClick={() => drawerRef.current?.close()}
-                              className="font-display text-lg leading-tight hover:text-brass-deep"
+                              className="font-display text-xl leading-tight hover:text-amber"
                             >
                               {l.scent.name}
                             </Link>
@@ -229,7 +229,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
                             <button
                               type="button"
                               onClick={() => store.setQty(l.scent.slug, l.size, 0)}
-                              className="link-line text-[12.5px] text-muted"
+                              className="text-[13px] text-muted underline underline-offset-4 hover:text-amber"
                               aria-label={`Remove ${l.scent.name}, ${sizeLabel(l.size)}`}
                             >
                               Remove
@@ -247,7 +247,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
                       type="checkbox"
                       checked={order.giftBox}
                       onChange={(e) => store.setGiftBox(e.target.checked)}
-                      className="mt-1 size-4 accent-[#1d1813]"
+                      className="mt-1 size-4 accent-[#8c4e03]"
                     />
                     <span>
                       <span className="text-[15px]">Pack it in a gift box</span>
@@ -255,14 +255,14 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
                     </span>
                   </label>
                   <label className="block">
-                    <span className="caps !text-[10.5px] text-muted">A note for us (optional)</span>
+                    <span className="text-[14px] text-ink">A note for us <span className="text-muted">(optional)</span></span>
                     <textarea
                       value={order.note}
                       onChange={(e) => store.setNote(e.target.value)}
                       rows={3}
                       maxLength={500}
                       placeholder="Your name and area, or a request such as mixing two scents in one bottle."
-                      className="mt-2 block w-full resize-none border border-line bg-white/50 px-3 py-2.5 text-[15px] placeholder:text-muted/80 focus:border-ink focus:outline-none"
+                      className="mt-2 block w-full resize-none border border-line bg-white px-3 py-2.5 text-[15px] placeholder:text-muted/80 focus:border-amber focus:outline-none"
                     />
                   </label>
                 </div>
@@ -273,15 +273,15 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
           {lines.length > 0 && (
             <div className="border-t border-line px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-5">
               <div className="flex items-baseline justify-between">
-                <span className="caps">Total</span>
-                <span className="text-xl tabular-nums">{formatRs(total)}</span>
+                <span className="font-display text-xl">Total</span>
+                <span className="font-display text-2xl font-bold tabular-nums text-amber">{formatRs(total)}</span>
               </div>
               <p className="mt-1 text-[13px] text-muted">We confirm stock and the final total on WhatsApp before you pay.</p>
-              <a href={sendHref} target="_blank" rel="noopener noreferrer" className="btn btn-ink mt-5 w-full">
+              <a href={sendHref} target="_blank" rel="noopener noreferrer" className="btn btn-amber mt-5 w-full !px-4">
                 <WhatsAppIcon size={18} />
                 Send order on WhatsApp
               </a>
-              <button type="button" onClick={() => store.clear()} className="link-line mx-auto mt-4 block text-[12.5px] text-muted">
+              <button type="button" onClick={() => store.clear()} className="mx-auto mt-4 block text-[13px] text-muted underline underline-offset-4 hover:text-amber">
                 Clear order
               </button>
             </div>
